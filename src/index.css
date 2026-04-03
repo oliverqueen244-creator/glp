@@ -1,0 +1,141 @@
+@import "tailwindcss";
+
+@theme {
+  --color-offwhite: #FAFAF8;
+  --color-charcoal: #1A1A1A;
+  --color-sage: #7C8B6F;
+  --color-amber: #C4956A;
+  --color-medical: #C47070;
+  --color-dusty: #8B9DC3;
+  --color-card: #FFFFFF;
+  --color-border: #E8E6E1;
+  --color-muted: #9A9A9A;
+  --font-serif: 'DM Serif Display', serif;
+  --font-sans: 'Inter', sans-serif;
+}
+
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: #FAFAF8;
+  color: #1A1A1A;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overscroll-behavior: none;
+  margin: 0;
+}
+
+#root {
+  max-width: 100%;
+  min-height: 100svh;
+}
+
+.font-serif {
+  font-family: 'DM Serif Display', serif;
+}
+
+.card {
+  background: #FFFFFF;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  padding: 20px;
+  transition: all 200ms ease;
+}
+
+.card-active {
+  border-left: 4px solid #C4956A;
+}
+
+.card-medical {
+  border-left: 4px solid #C47070;
+}
+
+.card-done {
+  opacity: 0.5;
+}
+
+.btn-primary {
+  background: #1A1A1A;
+  color: #FAFAF8;
+  border-radius: 10px;
+  padding: 14px 24px;
+  font-weight: 600;
+  font-size: 15px;
+  letter-spacing: 0.02em;
+  transition: all 200ms ease;
+  width: 100%;
+  text-align: center;
+  border: none;
+  cursor: pointer;
+}
+
+.btn-primary:active {
+  transform: scale(0.98);
+  opacity: 0.9;
+}
+
+.btn-secondary {
+  background: transparent;
+  color: #1A1A1A;
+  border: 1.5px solid #E8E6E1;
+  border-radius: 10px;
+  padding: 12px 20px;
+  font-weight: 500;
+  font-size: 14px;
+  transition: all 200ms ease;
+  cursor: pointer;
+}
+
+.btn-secondary:active {
+  background: #F0EEEA;
+}
+
+.slide-in {
+  animation: slideIn 300ms ease forwards;
+}
+
+@keyframes slideIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.fade-in {
+  animation: fadeIn 200ms ease forwards;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+input[type="time"] {
+  font-family: 'Inter', sans-serif;
+  font-size: 32px;
+  font-weight: 300;
+  text-align: center;
+  border: none;
+  background: #F5F4F0;
+  border-radius: 12px;
+  padding: 16px;
+  color: #1A1A1A;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+input[type="time"]:focus {
+  outline: 2px solid #C4956A;
+  outline-offset: 2px;
+}
+
+@keyframes checkmark {
+  0% { transform: scale(0); }
+  50% { transform: scale(1.2); }
+  100% { transform: scale(1); }
+}
+
+.checkmark-anim {
+  animation: checkmark 300ms ease forwards;
+}
