@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { MY_PROFILE } from '../data/profile';
 import { getWeekNumber, getCurrentDose } from '../engine/dayGenerator';
 
-export default function SettingsScreen({ settings, onUpdateSettings, onResetToday, onResetAll }) {
+export default function SettingsScreen({ settings, onUpdateSettings, onResetToday, onResetAll, installPrompt, onInstalled }) {
   const [showResetConfirm, setShowResetConfirm] = useState(false);
   const now = new Date();
   const dateStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
@@ -86,6 +86,24 @@ export default function SettingsScreen({ settings, onUpdateSettings, onResetToda
         </div>
       </div>
 
+      {/* Install App */}
+      {installPrompt && (
+        <div className="card mb-4">
+          <h3 className="text-xs font-semibold text-muted uppercase tracking-wider mb-3">Install App</h3>
+          <p className="text-sm text-muted mb-3">Add Protocol OS to your home screen for full offline access.</p>
+          <button
+            onClick={async () => {
+              installPrompt.prompt();
+              const result = await installPrompt.userChoice;
+              if (result.outcome === 'accepted') onInstalled();
+            }}
+            className="btn-primary w-full"
+          >
+            Install to Home Screen
+          </button>
+        </div>
+      )}
+
       {/* Actions */}
       <div className="space-y-3 mt-8">
         <button onClick={onResetToday} className="btn-secondary w-full">
@@ -116,7 +134,7 @@ export default function SettingsScreen({ settings, onUpdateSettings, onResetToda
       </div>
 
       <div className="text-center mt-8 text-xs text-muted">
-        Protocol OS v1.0 — Personal Build
+        Protocol OS v1.1 — Personal Build
       </div>
     </div>
   );

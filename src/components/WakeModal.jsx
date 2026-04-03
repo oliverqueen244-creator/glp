@@ -13,13 +13,14 @@ export default function WakeModal({ onStart, defaultWakeTime = '07:00' }) {
   const training = TRAINING_SCHEDULE[dayOfWeek];
   const isTrainingDay = training.type === 'resistance';
 
-  const defaultTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
-  const [wakeTime, setWakeTime] = useState(defaultWakeTime);
+  const currentTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+  const [wakeTime, setWakeTime] = useState(currentTime);
   const [customGym, setCustomGym] = useState(false);
   const [gymTime, setGymTime] = useState('18:00');
 
   const handleJustWoke = () => {
-    setWakeTime(defaultTime);
+    const n = new Date();
+    setWakeTime(`${String(n.getHours()).padStart(2, '0')}:${String(n.getMinutes()).padStart(2, '0')}`);
   };
 
   const handleStart = () => {

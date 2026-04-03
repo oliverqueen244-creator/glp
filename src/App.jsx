@@ -138,11 +138,19 @@ export default function App() {
     window.location.reload();
   }, []);
 
-  // Register service worker
+  const [installPrompt, setInstallPrompt] = useState(null);
+
+  // Register service worker + capture install prompt
   useEffect(() => {
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('/sw.js').catch(() => {});
     }
+    const handler = (e) => {
+      e.preventDefault();
+      setInstallPrompt(e);
+    };
+    window.addEventListener('beforeinstallprompt', handler);
+    return () => window.removeEventListener('beforeinstallprompt', handler);
   }, []);
 
   // Midnight auto-refresh: detect date change when app returns to foreground
@@ -191,6 +199,8 @@ export default function App() {
           onUpdateSettings={handleUpdateSettings}
           onResetToday={handleResetToday}
           onResetAll={handleResetAll}
+          installPrompt={installPrompt}
+          onInstalled={() => setInstallPrompt(null)}
         />
       )}
       <BottomNav activeTab={activeTab} onTabChange={setActiveTab} />
