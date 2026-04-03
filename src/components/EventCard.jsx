@@ -47,9 +47,12 @@ function RecipeView({ mealId }) {
   );
 }
 
-export default function EventCard({ event, isCurrent, isCompleted, onComplete, onSwapMeal }) {
+export default function EventCard({ event, isCurrent, isCompleted, onComplete, onSwapMeal, onCustomMeal, onSkipGym }) {
   const [showRecipe, setShowRecipe] = useState(false);
   const [showSwaps, setShowSwaps] = useState(false);
+  const [showCustom, setShowCustom] = useState(false);
+  const [customName, setCustomName] = useState('');
+  const [customProtein, setCustomProtein] = useState('');
 
   const meal = event.mealId ? MEALS_MAP[event.mealId] : null;
   const hasRecipe = meal && meal.ingredients && meal.ingredients.length > 0;
@@ -72,7 +75,7 @@ export default function EventCard({ event, isCurrent, isCompleted, onComplete, o
 
   if (isCompleted && !isCurrent) {
     return (
-      <div className="flex items-center gap-3 py-2 px-1 opacity-40">
+      <button onClick={() => onComplete(event.id)} className="w-full flex items-center gap-3 py-2 px-1 opacity-40 text-left">
         <div className="w-5 h-5 rounded-full bg-sage flex items-center justify-center shrink-0">
           <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
             <path d="M2 6L5 9L10 3" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
@@ -81,7 +84,7 @@ export default function EventCard({ event, isCurrent, isCompleted, onComplete, o
         <span className="text-xs text-muted line-through">{event.timeStr}</span>
         <span className="text-xs text-muted line-through flex-1 truncate">{event.title}</span>
         {event.protein > 0 && <span className="text-xs text-muted">+{event.protein}g</span>}
-      </div>
+      </button>
     );
   }
 
@@ -153,6 +156,11 @@ export default function EventCard({ event, isCurrent, isCompleted, onComplete, o
             Swap
           </button>
         )}
+        {event.type === 'meal' && onCustomMeal && (
+          <button onClick={() => setShowCustom(!showCustom)} className="btn-secondary text-sm px-3">
+            {showCustom ? 'Cancel' : 'Ate something else'}
+          </button>
+        )}
       </div>
 
       {showSwaps && hasSwaps && (
@@ -175,12 +183,55 @@ export default function EventCard({ event, isCurrent, isCompleted, onComplete, o
         </div>
       )}
 
+      {showCustom && (
+        <div className="mt-3 pt-3 border-t border-border fade-in">
+          <div className="text-xs font-semibold text-muted uppercase tracking-wider mb-2">What did you eat?</div>
+          <input
+            type="text"
+            placeholder="e.g. Chicken sausage scramble"
+            value={customName}
+            onChange={e => setCustomName(e.target.value)}
+            className="w-full text-sm px-3 py-2 rounded-lg bg-offwhite border border-border text-charcoal mb-2"
+          />
+          <div className="flex items-center gap-2 mb-3">
+            <label className="text-xs text-muted">Protein (g):</label>
+            <input
+              type="number"
+              placeholder="0"
+              value={customProtein}
+              onChange={e => setCustomProtein(e.target.value)}
+              className="w-20 text-sm px-2 py-1.5 rounded-lg bg-offwhite border border-border text-charcoal"
+            />
+          </div>
+          <button
+            onClick={() => {
+              if (customName.trim()) {
+                onCustomMeal(event.id, customName.trim(), Number(customProtein) || 0);
+                setShowCustom(false);
+              }
+            }}
+            className="btn-primary text-sm"
+          >
+            Log It
+          </button>
+        </div>
+      )}
+
       {showRecipe && <RecipeView mealId={event.mealId} />}
 
       {event.type === 'training' && event.trainingType === 'resistance' && (
         <div className="mt-3 text-xs text-muted">
           Tap the Workout tab for full exercise list with set tracking.
         </div>
+      )}
+
+      {event.type === 'training' && event.trainingType !== 'rest' && onSkipGym && (
+        <button
+          onClick={() => onSkipGym()}
+          className="btn-secondary w-full mt-2 text-xs text-muted"
+        >
+          Skip Training Today
+        </button>
       )}
 
       <button

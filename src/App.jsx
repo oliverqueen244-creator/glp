@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useLocalStorage } from './hooks/useLocalStorage';
 import { generateDay } from './engine/dayGenerator';
 import { MEALS_MAP } from './data/meals';
@@ -22,6 +22,8 @@ export default function App() {
   const [completedIds, setCompletedIds] = useLocalStorage(`completed-${todayKey}`, []);
   const [completedSupplements, setCompletedSupplements] = useLocalStorage(`supps-${todayKey}`, []);
   const [nauseaMode, setNauseaMode] = useLocalStorage(`nausea-${todayKey}`, false);
+  const [hydration, setHydration] = useLocalStorage(`hydration-${todayKey}`, 0);
+  const [gymOverride, setGymOverride] = useLocalStorage(`gym-${todayKey}`, null);
   const [settings, setSettings] = useLocalStorage('protocol-settings', {
     defaultWakeTime: '07:00',
     workStart: '09:00',
@@ -30,7 +32,7 @@ export default function App() {
   });
   const [showWakeModal, setShowWakeModal] = useState(wakeTime === null);
 
-  const regenerateDay = useCallback((wakeMinutes, nausea = nauseaMode) => {
+  const regenerateDay = useCallback((wakeMinutes, nausea = nauseaMode, gymStart = gymOverride) => {
     const now = new Date();
     const dayOfWeek = now.getDay();
     const startDate = new Date('2026-04-02');
@@ -39,19 +41,22 @@ export default function App() {
     const [wh, wm] = (settings.workEnd || '18:00').split(':').map(Number);
     const workEndMinutes = wh * 60 + wm;
 
-    const dayEvents = generateDay(wakeMinutes, dayOfWeek, weekNum, nausea, workEndMinutes);
+    const dayEvents = generateDay(wakeMinutes, dayOfWeek, weekNum, nausea, workEndMinutes, gymStart);
     setEvents(dayEvents);
-  }, [nauseaMode, settings.workEnd, setEvents]);
+  }, [nauseaMode, gymOverride, settings.workEnd, setEvents]);
 
-  const handleWakeStart = useCallback((wakeMinutes) => {
+  const handleWakeStart = useCallback(({ wakeMinutes, gymStartMinutes }) => {
     setWakeTime(wakeMinutes);
-    regenerateDay(wakeMinutes);
+    if (gymStartMinutes !== null) {
+      setGymOverride(gymStartMinutes);
+    }
+    regenerateDay(wakeMinutes, nauseaMode, gymStartMinutes);
     setShowWakeModal(false);
-  }, [setWakeTime, regenerateDay]);
+  }, [setWakeTime, setGymOverride, nauseaMode, regenerateDay]);
 
   const handleComplete = useCallback((eventId) => {
     setCompletedIds(prev => {
-      if (prev.includes(eventId)) return prev;
+      if (prev.includes(eventId)) return prev.filter(id => id !== eventId);
       return [...prev, eventId];
     });
   }, [setCompletedIds]);
@@ -72,6 +77,21 @@ export default function App() {
     }));
   }, [setEvents]);
 
+  const handleCustomMeal = useCallback((eventId, name, protein) => {
+    setEvents(prev => prev.map(e => {
+      if (e.id !== eventId) return e;
+      return {
+        ...e,
+        title: `Meal ${e.mealNum}: ${name}`,
+        mealId: null,
+        protein,
+        calories: 0,
+        cookTime: 0,
+      };
+    }));
+    handleComplete(eventId);
+  }, [setEvents, handleComplete]);
+
   const handleToggleNausea = useCallback(() => {
     const newNausea = !nauseaMode;
     setNauseaMode(newNausea);
@@ -85,6 +105,20 @@ export default function App() {
       prev.includes(suppId) ? prev.filter(id => id !== suppId) : [...prev, suppId]
     );
   }, [setCompletedSupplements]);
+
+  const handleSkipGym = useCallback(() => {
+    setEvents(prev => prev.filter(e =>
+      e.type !== 'training' || e.trainingType === 'rest'
+    ).filter(e =>
+      e.type !== 'travel'
+    ).filter(e =>
+      !(e.type === 'supplement' && e.title === 'Post-Training ORS')
+    ));
+  }, [setEvents]);
+
+  const handleAddHydration = useCallback((ml) => {
+    setHydration(prev => prev + ml);
+  }, [setHydration]);
 
   const handleRecalculate = useCallback(() => {
     setShowWakeModal(true);
@@ -105,12 +139,25 @@ export default function App() {
   }, []);
 
   // Register service worker
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/sw.js').catch(() => {});
-  }
+  useEffect(() => {
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/sw.js').catch(() => {});
+    }
+  }, []);
+
+  // Midnight auto-refresh: detect date change when app returns to foreground
+  useEffect(() => {
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible' && getTodayKey() !== todayKey) {
+        window.location.reload();
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibility);
+    return () => document.removeEventListener('visibilitychange', handleVisibility);
+  }, [todayKey]);
 
   if (showWakeModal) {
-    return <WakeModal onStart={handleWakeStart} />;
+    return <WakeModal onStart={handleWakeStart} defaultWakeTime={settings.defaultWakeTime} />;
   }
 
   return (
@@ -121,6 +168,10 @@ export default function App() {
           completedIds={completedIds}
           onComplete={handleComplete}
           onSwapMeal={handleSwapMeal}
+          onCustomMeal={handleCustomMeal}
+          onSkipGym={handleSkipGym}
+          hydration={hydration}
+          onAddHydration={handleAddHydration}
           nauseaMode={nauseaMode}
           onToggleNausea={handleToggleNausea}
           onRecalculate={handleRecalculate}

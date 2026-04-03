@@ -1,5 +1,3 @@
-import { useMemo } from 'react';
-
 export default function ProteinRing({ consumed, target }) {
   const pct = Math.min(consumed / target, 1);
   const radius = 38;

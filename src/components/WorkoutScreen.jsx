@@ -33,7 +33,7 @@ function RestTimer({ seconds, onDismiss }) {
   );
 }
 
-function ExerciseCard({ exercise, exerciseIndex, workout, completedSets, onCompleteSet, onStartTimer, weightLog, onLogWeight }) {
+function ExerciseCard({ exercise, exerciseIndex, completedSets, onCompleteSet, onStartTimer, weightLog, onLogWeight }) {
   const [showInstructions, setShowInstructions] = useState(false);
   const totalSets = exercise.sets;
   const doneSets = completedSets[exerciseIndex] || 0;
@@ -158,7 +158,7 @@ export default function WorkoutScreen() {
     );
   }
 
-  const isCircuit = workout.exercises[0]?.isCircuit || false;
+  const isCircuit = workout.isCircuit || false;
   const totalExercises = workout.exercises.length;
   const allDone = workout.exercises.every((ex, i) => (completedSets[i] || 0) >= ex.sets);
 
@@ -207,7 +207,6 @@ export default function WorkoutScreen() {
           key={i}
           exercise={exercise}
           exerciseIndex={i}
-          workout={workout}
           completedSets={completedSets}
           onCompleteSet={handleCompleteSet}
           onStartTimer={setTimerSeconds}

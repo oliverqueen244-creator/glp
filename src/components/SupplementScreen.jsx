@@ -1,17 +1,17 @@
 import { MY_SUPPLEMENTS } from '../data/supplements';
 
 const TIMING_GROUPS = [
+  { key: 'wake', label: 'Morning Hydration' },
   { key: 'meal-1', label: 'With Breakfast (Meal 1)' },
   { key: 'meal-2', label: 'With Meal 2' },
   { key: 'pre-meal-3', label: 'Pre-Workout Fibre' },
   { key: 'meal-3', label: 'Pre-Workout (Meal 3)' },
+  { key: 'post-training', label: 'Post-Training' },
   { key: 'meal-4', label: 'With Meal 4 (Post-Workout)' },
-  { key: 'meal-5', label: 'With Dinner (Meal 5)' },
   { key: 'pre-meal-5', label: 'Pre-Dinner Fibre' },
+  { key: 'meal-5', label: 'With Dinner (Meal 5)' },
   { key: 'meal-6', label: 'Bedtime (Meal 6)' },
   { key: 'bedtime', label: 'Bedtime' },
-  { key: 'wake', label: 'Morning Hydration' },
-  { key: 'post-training', label: 'Post-Training' },
 ];
 
 export default function SupplementScreen({ completedSupplements, onToggleSupplement, nauseaMode }) {

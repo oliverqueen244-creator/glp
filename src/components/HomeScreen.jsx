@@ -1,5 +1,6 @@
-import { useMemo } from 'react';
+import { useState } from 'react';
 import ProteinRing from './ProteinRing';
+import HydrationCounter from './HydrationCounter';
 import EventCard from './EventCard';
 import { MY_PROFILE, TRAINING_SCHEDULE } from '../data/profile';
 import { getWeekNumber, isInjectionDay, calculateProteinConsumed, getCurrentEvent } from '../engine/dayGenerator';
@@ -7,7 +8,38 @@ import { getWeekNumber, isInjectionDay, calculateProteinConsumed, getCurrentEven
 const DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 const MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
-export default function HomeScreen({ events, completedIds, onComplete, onSwapMeal, nauseaMode, onToggleNausea, onRecalculate }) {
+function DoneSection({ completedEvents, onComplete, onSwapMeal }) {
+  const [collapsed, setCollapsed] = useState(true);
+  return (
+    <div>
+      <button
+        onClick={() => setCollapsed(!collapsed)}
+        className="flex items-center justify-between w-full mb-2"
+      >
+        <h2 className="text-xs font-semibold text-muted uppercase tracking-wider">
+          Done Today ({completedEvents.length})
+        </h2>
+        <span className="text-xs text-muted">{collapsed ? 'Show' : 'Hide'}</span>
+      </button>
+      {!collapsed && (
+        <div className="card fade-in">
+          {completedEvents.map(event => (
+            <EventCard
+              key={event.id}
+              event={event}
+              isCurrent={false}
+              isCompleted={true}
+              onComplete={onComplete}
+              onSwapMeal={onSwapMeal}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+export default function HomeScreen({ events, completedIds, onComplete, onSwapMeal, onCustomMeal, onSkipGym, hydration, onAddHydration, nauseaMode, onToggleNausea, onRecalculate }) {
   const now = new Date();
   const dayOfWeek = now.getDay();
   const dateStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
@@ -30,7 +62,7 @@ export default function HomeScreen({ events, completedIds, onComplete, onSwapMea
       <div className="px-5 pt-5 pb-3">
         <div className="flex items-start justify-between mb-1">
           <div>
-            <h1 className="text-xl font-semibold text-charcoal">
+            <h1 className="text-xl font-semibold text-charcoal" style={{ fontFamily: "'DM Serif Display', serif" }}>
               {DAY_NAMES[dayOfWeek]}, {MONTH_NAMES[now.getMonth()]} {now.getDate()}
             </h1>
             <div className="flex items-center gap-2 mt-1">
@@ -74,8 +106,11 @@ export default function HomeScreen({ events, completedIds, onComplete, onSwapMea
           </div>
         )}
 
-        <div className="flex items-center justify-between mt-4">
+        <div className="flex items-center gap-4 mt-4">
           <ProteinRing consumed={proteinConsumed} target={MY_PROFILE.proteinTarget} />
+          <HydrationCounter consumed={hydration} onAdd={onAddHydration} />
+        </div>
+        <div className="flex justify-end mt-2">
           <button onClick={onRecalculate} className="btn-secondary text-xs">
             Recalculate
           </button>
@@ -93,6 +128,8 @@ export default function HomeScreen({ events, completedIds, onComplete, onSwapMea
               isCompleted={false}
               onComplete={onComplete}
               onSwapMeal={onSwapMeal}
+              onCustomMeal={onCustomMeal}
+              onSkipGym={onSkipGym}
             />
           </div>
         )}
@@ -110,6 +147,8 @@ export default function HomeScreen({ events, completedIds, onComplete, onSwapMea
                   isCompleted={false}
                   onComplete={onComplete}
                   onSwapMeal={onSwapMeal}
+                  onCustomMeal={onCustomMeal}
+                  onSkipGym={onSkipGym}
                 />
               ))}
             </div>
@@ -118,22 +157,16 @@ export default function HomeScreen({ events, completedIds, onComplete, onSwapMea
 
         {/* Done today */}
         {completedEvents.length > 0 && (
-          <div>
-            <h2 className="text-xs font-semibold text-muted uppercase tracking-wider mb-2">
-              Done Today ({completedEvents.length})
-            </h2>
-            <div className="card opacity-60">
-              {completedEvents.map(event => (
-                <EventCard
-                  key={event.id}
-                  event={event}
-                  isCurrent={false}
-                  isCompleted={true}
-                  onComplete={onComplete}
-                  onSwapMeal={onSwapMeal}
-                />
-              ))}
-            </div>
+          <DoneSection
+            completedEvents={completedEvents}
+            onComplete={onComplete}
+            onSwapMeal={onSwapMeal}
+          />
+        )}
+
+        {events.length > 0 && completedEvents.length > 0 && (
+          <div className="text-center py-6 text-sm text-muted">
+            Today: {proteinConsumed}g protein across {completedEvents.filter(e => e.type === 'meal').length} meals. Week {weekNum}, Day {dayOfWeek + 1}.
           </div>
         )}
 

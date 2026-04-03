@@ -53,7 +53,7 @@ function getSupplementsForTiming(timing, dayOfWeek, nauseaMode) {
   });
 }
 
-export function generateDay(wakeTimeMinutes, dayOfWeek, weekNum, nauseaMode = false, workEndMinutes = null) {
+export function generateDay(wakeTimeMinutes, dayOfWeek, weekNum, nauseaMode = false, workEndMinutes = null, gymStartMinutes = null) {
   const events = [];
   const training = TRAINING_SCHEDULE[dayOfWeek];
   const menu = WEEKLY_MENU[dayOfWeek];
@@ -144,7 +144,14 @@ export function generateDay(wakeTimeMinutes, dayOfWeek, weekNum, nauseaMode = fa
       meal4Time = meal3Time + 120; // no gym, shorter gap
     } else {
       // Training block
-      const trainingStart = workEndMinutes ? Math.max(workEndMinutes, meal3Time + 20) : meal3Time + 20;
+      let trainingStart;
+      if (gymStartMinutes) {
+        trainingStart = gymStartMinutes;
+        // Shift meal 3 to 30 min before gym
+        meal3Time = gymStartMinutes - 30;
+      } else {
+        trainingStart = workEndMinutes ? Math.max(workEndMinutes, meal3Time + 20) : meal3Time + 20;
+      }
       const trainingEnd = trainingStart + 120;
       meal4Time = trainingEnd + 15;
     }
@@ -205,9 +212,14 @@ export function generateDay(wakeTimeMinutes, dayOfWeek, weekNum, nauseaMode = fa
 
   // TRAINING BLOCK
   if (!isRest) {
-    const trainingStart = workEndMinutes
-      ? Math.max(workEndMinutes, (meal3Time || meal2Time) + 20)
-      : (meal3Time || meal2Time) + 20;
+    let trainingStart;
+    if (gymStartMinutes) {
+      trainingStart = gymStartMinutes;
+    } else {
+      trainingStart = workEndMinutes
+        ? Math.max(workEndMinutes, (meal3Time || meal2Time) + 20)
+        : (meal3Time || meal2Time) + 20;
+    }
 
     if (!isVeryLateWake || trainingStart < 1320) { // Don't add training after 10 PM
       addEvent(trainingStart - 10, 'travel', 'Travel to Gym', {
@@ -288,9 +300,9 @@ export function generateDay(wakeTimeMinutes, dayOfWeek, weekNum, nauseaMode = fa
     });
   }
 
-  // MAGNESIUM
-  addEvent(meal6Time - 30, 'supplement', 'Magnesium Glycinate — 4 tablets', {
-    description: 'Take 30 min before bedtime shake. Sleep aid + muscle recovery.',
+  // Bedtime supplements
+  addEvent(meal6Time - 30, 'supplement', 'Bedtime Supplements', {
+    description: 'Take 30 min before bedtime shake.',
     supplements: getSupplementsForTiming('bedtime', dayOfWeek, nauseaMode),
   });
 
