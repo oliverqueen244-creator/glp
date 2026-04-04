@@ -2,6 +2,7 @@ const tabs = [
   {
     id: 'home',
     label: 'Today',
+    ariaLabel: 'Today - daily schedule',
     icon: (active) => (
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={active ? '#C4956A' : '#9A9A9A'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
@@ -11,7 +12,8 @@ const tabs = [
   },
   {
     id: 'supplements',
-    label: 'Supplements',
+    label: 'Supps',
+    ariaLabel: 'Supplements checklist',
     icon: (active) => (
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={active ? '#C4956A' : '#9A9A9A'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <rect x="3" y="3" width="18" height="18" rx="2" />
@@ -23,6 +25,7 @@ const tabs = [
   {
     id: 'workout',
     label: 'Workout',
+    ariaLabel: 'Workout tracker',
     icon: (active) => (
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={active ? '#C4956A' : '#9A9A9A'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <path d="M6.5 6.5h11M6.5 17.5h11M4 10h16M4 14h16" />
@@ -34,6 +37,7 @@ const tabs = [
   {
     id: 'settings',
     label: 'Settings',
+    ariaLabel: 'App settings',
     icon: (active) => (
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={active ? '#C4956A' : '#9A9A9A'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <circle cx="12" cy="12" r="3" />
@@ -46,20 +50,28 @@ const tabs = [
 export default function BottomNav({ activeTab, onTabChange, supplementsRemaining = 0 }) {
   return (
     <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-border z-40"
+      role="tablist"
+      aria-label="Main navigation"
       style={{ paddingBottom: 'env(safe-area-inset-bottom, 8px)' }}>
-      <div className="flex justify-around items-center h-14 max-w-lg mx-auto">
+      <div className="flex justify-around items-center h-16 max-w-lg mx-auto">
         {tabs.map(tab => {
           const active = activeTab === tab.id;
           return (
             <button
               key={tab.id}
+              role="tab"
+              aria-selected={active}
+              aria-label={tab.ariaLabel}
               onClick={() => onTabChange(tab.id)}
-              className="flex flex-col items-center gap-0.5 py-1 px-4 transition-all duration-200"
+              className="flex flex-col items-center justify-center gap-0.5 min-w-[64px] min-h-[48px] py-1.5 px-3 rounded-lg transition-all duration-200 relative"
+              style={{
+                backgroundColor: active ? '#FFF5ED' : 'transparent',
+              }}
             >
               <div className="relative">
                 {tab.icon(active)}
                 {tab.id === 'supplements' && supplementsRemaining > 0 && (
-                  <span className="absolute -top-1 -right-1.5 w-3.5 h-3.5 rounded-full text-[8px] font-bold flex items-center justify-center text-white" style={{ backgroundColor: '#C4956A' }}>
+                  <span className="absolute -top-1 -right-2 w-4 h-4 rounded-full text-[9px] font-bold flex items-center justify-center text-white" style={{ backgroundColor: '#C4956A' }}>
                     {supplementsRemaining > 9 ? '9+' : supplementsRemaining}
                   </span>
                 )}

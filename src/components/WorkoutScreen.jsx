@@ -177,10 +177,26 @@ export default function WorkoutScreen() {
   }, [handleCompleteSet, workout, completedSets, todayWeights, dateKey, setWeightHistory]);
 
   if (!workout) {
+    const isRest = training.type === 'rest';
     return (
       <div className="px-5 pt-5 pb-24">
-        <h1 className="text-xl font-semibold text-charcoal mb-2">{training.name}</h1>
-        <p className="text-sm text-muted">No structured workout data available for today.</p>
+        <h1 className="text-xl font-semibold text-charcoal mb-4" style={{ fontFamily: "'DM Serif Display', serif" }}>
+          {training.name}
+        </h1>
+        {isRest ? (
+          <div className="card text-center py-8" style={{ background: '#F0F3F8' }}>
+            <div className="text-3xl mb-3 opacity-40">&#128694;</div>
+            <div className="text-base font-medium text-charcoal mb-2">Active Recovery Day</div>
+            <div className="text-sm text-muted mb-4">45-minute LISS walk at conversational pace. Keep heart rate under 120 BPM.</div>
+            <div className="text-xs text-muted px-4">
+              Recovery is when your muscles grow. Enjoy the walk, stay hydrated, and get 7+ hours of sleep tonight.
+            </div>
+          </div>
+        ) : (
+          <div className="card text-center py-8">
+            <div className="text-sm text-muted">No workout data available for today's session.</div>
+          </div>
+        )}
       </div>
     );
   }
@@ -255,6 +271,17 @@ export default function WorkoutScreen() {
         >
           Start Round {currentRound + 1}
         </button>
+      )}
+
+      {/* Workout complete */}
+      {allDone && (!isCircuit || currentRound >= workout.rounds) && (
+        <div className="card text-center py-6 mb-4 fade-in" style={{ background: '#F4F7F2' }}>
+          <div className="text-2xl mb-2">Workout Complete</div>
+          <div className="text-sm text-charcoal font-medium">
+            {totalExercises} exercises finished
+          </div>
+          <div className="text-xs text-muted mt-1">Great work. Make sure to eat within 60 minutes.</div>
+        </div>
       )}
 
       {/* Cardio */}

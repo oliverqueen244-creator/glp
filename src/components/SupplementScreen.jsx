@@ -64,8 +64,12 @@ export default function SupplementScreen({ completedSupplements, onToggleSupplem
               return (
                 <button
                   key={supp.id}
-                  onClick={() => onToggleSupplement(supp.id)}
-                  className="w-full flex items-start gap-3 py-3 text-left transition-all duration-200"
+                  onClick={() => {
+                    if (navigator.vibrate && !isDone) navigator.vibrate(50);
+                    onToggleSupplement(supp.id);
+                  }}
+                  className="w-full flex items-start gap-3 py-3 px-1 text-left transition-all duration-200 min-h-[48px] rounded-lg active:bg-gray-50"
+                  aria-label={`${isDone ? 'Undo' : 'Mark'} ${supp.name}`}
                 >
                   <div
                     className="w-5 h-5 rounded border-2 shrink-0 mt-0.5 flex items-center justify-center transition-all duration-200"

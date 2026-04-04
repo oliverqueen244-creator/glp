@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import ProteinRing from './ProteinRing';
 import HydrationCounter from './HydrationCounter';
 import EventCard from './EventCard';
@@ -11,27 +11,31 @@ const MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Se
 function DoneSection({ completedEvents, onComplete, onSwapMeal }) {
   const [collapsed, setCollapsed] = useState(true);
   return (
-    <div>
+    <div className="mb-4">
       <button
         onClick={() => setCollapsed(!collapsed)}
-        className="flex items-center justify-between w-full mb-2"
+        className="flex items-center justify-between w-full mb-2 py-1 min-h-[36px]"
+        aria-expanded={!collapsed}
       >
         <h2 className="text-xs font-semibold text-muted uppercase tracking-wider">
           Done Today ({completedEvents.length})
         </h2>
-        <span className="text-xs text-muted">{collapsed ? 'Show' : 'Hide'}</span>
+        <span className="text-xs text-muted px-2">{collapsed ? 'Show' : 'Hide'}</span>
       </button>
       {!collapsed && (
         <div className="card fade-in">
-          {completedEvents.map(event => (
-            <EventCard
-              key={event.id}
-              event={event}
-              isCurrent={false}
-              isCompleted={true}
-              onComplete={onComplete}
-              onSwapMeal={onSwapMeal}
-            />
+          <p className="text-[10px] text-muted mb-2">Tap to undo</p>
+          {completedEvents.map((event, idx) => (
+            <div key={event.id}>
+              {idx > 0 && <div className="border-t border-border" />}
+              <EventCard
+                event={event}
+                isCurrent={false}
+                isCompleted={true}
+                onComplete={onComplete}
+                onSwapMeal={onSwapMeal}
+              />
+            </div>
           ))}
         </div>
       )}
@@ -59,6 +63,19 @@ export default function HomeScreen({ events, completedIds, onComplete, onSwapMea
   const isPastEight = currentMinutes >= 1200; // 8 PM
   const soakingDone = soaking && completedIds.some(id => events.find(e => e.id === id && e.type === 'prep'));
   const accentBg = injDay ? 'rgba(196, 112, 112, 0.05)' : undefined;
+  const currentRef = useRef(null);
+  const totalEvents = events.length;
+  const doneCount = completedEvents.length;
+  const dayPct = totalEvents > 0 ? Math.round((doneCount / totalEvents) * 100) : 0;
+
+  // Scroll to current event on mount
+  useEffect(() => {
+    if (currentRef.current) {
+      setTimeout(() => {
+        currentRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, 300);
+    }
+  }, []);
 
   return (
     <div className="pb-24" style={{ backgroundColor: accentBg }}>
@@ -88,7 +105,8 @@ export default function HomeScreen({ events, completedIds, onComplete, onSwapMea
           </div>
           <button
             onClick={onToggleNausea}
-            className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full transition-all duration-200"
+            aria-label={nauseaMode ? 'Disable nausea mode' : 'Enable nausea mode'}
+            className="flex items-center gap-1.5 text-xs px-3 py-2 rounded-full transition-all duration-200 min-h-[44px]"
             style={{
               background: nauseaMode ? '#FDECEC' : '#F5F4F0',
               color: nauseaMode ? '#C47070' : '#9A9A9A',
@@ -102,6 +120,25 @@ export default function HomeScreen({ events, completedIds, onComplete, onSwapMea
             Nausea
           </button>
         </div>
+
+        {/* Day progress bar */}
+        {totalEvents > 0 && (
+          <div className="mt-3 mb-1">
+            <div className="flex items-center justify-between mb-1">
+              <span className="text-[11px] text-muted">{doneCount} of {totalEvents} tasks done</span>
+              <span className="text-[11px] font-medium" style={{ color: dayPct === 100 ? '#7C8B6F' : '#C4956A' }}>{dayPct}%</span>
+            </div>
+            <div className="w-full h-1.5 bg-border rounded-full overflow-hidden">
+              <div
+                className={`h-full rounded-full transition-all duration-700 ease-out ${dayPct === 100 ? 'celebrate' : ''}`}
+                style={{
+                  width: `${dayPct}%`,
+                  backgroundColor: dayPct === 100 ? '#7C8B6F' : '#C4956A',
+                }}
+              />
+            </div>
+          </div>
+        )}
 
         {nauseaMode && (
           <div className="mt-2 px-3 py-2 rounded-lg text-xs font-medium fade-in"
@@ -122,7 +159,7 @@ export default function HomeScreen({ events, completedIds, onComplete, onSwapMea
           <HydrationCounter consumed={hydration} onAdd={onAddHydration} />
         </div>
         <div className="flex justify-end mt-2">
-          <button onClick={onRecalculate} className="btn-secondary text-xs">
+          <button onClick={onRecalculate} className="btn-secondary text-xs min-h-[36px]">
             Recalculate
           </button>
         </div>
@@ -131,7 +168,7 @@ export default function HomeScreen({ events, completedIds, onComplete, onSwapMea
       {/* Current Action */}
       <div className="px-5">
         {currentEvent && (
-          <div className="mb-2">
+          <div className="mb-2" ref={currentRef}>
             <h2 className="text-xs font-semibold text-muted uppercase tracking-wider mb-3">Now</h2>
             <EventCard
               event={currentEvent}
@@ -148,19 +185,23 @@ export default function HomeScreen({ events, completedIds, onComplete, onSwapMea
         {/* Upcoming */}
         {upcomingEvents.length > 0 && (
           <div className="mb-4">
-            <h2 className="text-xs font-semibold text-muted uppercase tracking-wider mb-2">Coming Up</h2>
+            <h2 className="text-xs font-semibold text-muted uppercase tracking-wider mb-2">
+              Coming Up <span className="font-normal">({upcomingEvents.length})</span>
+            </h2>
             <div className="card">
-              {upcomingEvents.map(event => (
-                <EventCard
-                  key={event.id}
-                  event={event}
-                  isCurrent={false}
-                  isCompleted={false}
-                  onComplete={onComplete}
-                  onSwapMeal={onSwapMeal}
-                  onCustomMeal={onCustomMeal}
-                  onSkipGym={onSkipGym}
-                />
+              {upcomingEvents.map((event, idx) => (
+                <div key={event.id}>
+                  {idx > 0 && <div className="border-t border-border" />}
+                  <EventCard
+                    event={event}
+                    isCurrent={false}
+                    isCompleted={false}
+                    onComplete={onComplete}
+                    onSwapMeal={onSwapMeal}
+                    onCustomMeal={onCustomMeal}
+                    onSkipGym={onSkipGym}
+                  />
+                </div>
               ))}
             </div>
           </div>
@@ -175,15 +216,28 @@ export default function HomeScreen({ events, completedIds, onComplete, onSwapMea
           />
         )}
 
-        {events.length > 0 && completedEvents.length > 0 && (
-          <div className="text-center py-6 text-sm text-muted">
-            Today: {proteinConsumed}g protein across {completedEvents.filter(e => e.type === 'meal').length} meals. Week {weekNum}, Day {dayOfWeek + 1}.
+        {events.length > 0 && doneCount === totalEvents && totalEvents > 0 && (
+          <div className="card text-center py-6 mb-4 fade-in" style={{ background: '#F4F7F2' }}>
+            <div className="text-2xl mb-2">Day complete</div>
+            <div className="text-sm text-charcoal font-medium">{proteinConsumed}g protein across {completedEvents.filter(e => e.type === 'meal').length} meals</div>
+            <div className="text-xs text-muted mt-1">Week {weekNum}, Day {dayOfWeek + 1}</div>
+          </div>
+        )}
+
+        {events.length > 0 && completedEvents.length > 0 && doneCount < totalEvents && (
+          <div className="text-center py-4 text-xs text-muted">
+            {proteinConsumed}g protein so far across {completedEvents.filter(e => e.type === 'meal').length} meals
           </div>
         )}
 
         {events.length === 0 && (
-          <div className="text-center py-16 text-muted text-sm">
-            No events for today. Tap Recalculate to set your wake time.
+          <div className="text-center py-16">
+            <div className="text-4xl mb-3 opacity-30">&#9737;</div>
+            <div className="text-sm text-muted mb-1">No schedule generated yet</div>
+            <div className="text-xs text-muted mb-4">Tap below to set your wake time and build today's plan</div>
+            <button onClick={onRecalculate} className="btn-primary mx-auto" style={{ maxWidth: '200px' }}>
+              Set Wake Time
+            </button>
           </div>
         )}
       </div>

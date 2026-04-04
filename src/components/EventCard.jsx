@@ -75,7 +75,11 @@ export default function EventCard({ event, isCurrent, isCompleted, onComplete, o
 
   if (isCompleted && !isCurrent) {
     return (
-      <button onClick={() => onComplete(event.id)} className="w-full flex items-center gap-3 py-2 px-1 opacity-40 text-left">
+      <button
+        onClick={() => onComplete(event.id)}
+        className="w-full flex items-center gap-3 py-3 px-2 opacity-40 text-left min-h-[44px] rounded-lg transition-all duration-200 active:bg-gray-50"
+        aria-label={`Undo: ${event.title}`}
+      >
         <div className="w-5 h-5 rounded-full bg-sage flex items-center justify-center shrink-0">
           <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
             <path d="M2 6L5 9L10 3" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
@@ -90,9 +94,9 @@ export default function EventCard({ event, isCurrent, isCompleted, onComplete, o
 
   if (!isCurrent) {
     return (
-      <div className="flex items-center gap-3 py-2.5 px-1">
+      <div className="flex items-center gap-3 py-3 px-2 min-h-[44px]">
         <div className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: typeColors[event.type] || '#E8E6E1' }} />
-        <span className="text-xs text-muted w-16 shrink-0">{event.timeStr}</span>
+        <span className="text-xs text-muted w-14 shrink-0">{event.timeStr}</span>
         <span className="text-sm text-charcoal flex-1 truncate">{event.title}</span>
         {event.protein > 0 && <span className="text-xs font-medium text-amber">+{event.protein}g</span>}
       </div>
@@ -242,8 +246,11 @@ export default function EventCard({ event, isCurrent, isCompleted, onComplete, o
       )}
 
       <button
-        onClick={() => onComplete(event.id)}
-        className="btn-primary mt-4 flex items-center justify-center gap-2"
+        onClick={() => {
+          if (navigator.vibrate) navigator.vibrate(50);
+          onComplete(event.id);
+        }}
+        className="btn-primary mt-4 flex items-center justify-center gap-2 min-h-[48px]"
       >
         <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
           <path d="M3 8L7 12L13 4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>

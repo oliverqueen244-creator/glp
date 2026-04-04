@@ -139,3 +139,58 @@ input[type="time"]:focus {
 .checkmark-anim {
   animation: checkmark 300ms ease forwards;
 }
+
+/* Toast notification */
+.toast-slide-in {
+  animation: toastIn 300ms ease forwards;
+}
+
+@keyframes toastIn {
+  from { opacity: 0; transform: translateY(-20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Completion pulse */
+.complete-pulse {
+  animation: completePulse 400ms ease forwards;
+}
+
+@keyframes completePulse {
+  0% { transform: scale(1); }
+  30% { transform: scale(0.95); opacity: 0.8; }
+  60% { transform: scale(1.02); }
+  100% { transform: scale(1); opacity: 0.4; }
+}
+
+/* Progress bar shimmer */
+.progress-shimmer {
+  background-size: 200% 100%;
+  animation: shimmer 2s ease infinite;
+}
+
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* Celebration bounce for hitting targets */
+.celebrate {
+  animation: celebrate 600ms ease forwards;
+}
+
+@keyframes celebrate {
+  0% { transform: scale(1); }
+  25% { transform: scale(1.1); }
+  50% { transform: scale(0.95); }
+  75% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
+
+/* Smooth list item removal */
+.item-exit {
+  animation: itemExit 250ms ease forwards;
+}
+
+@keyframes itemExit {
+  to { opacity: 0; transform: translateX(-20px); height: 0; padding: 0; margin: 0; overflow: hidden; }
+}

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { MY_PROFILE } from '../data/profile';
 import { getWeekNumber, getCurrentDose } from '../engine/dayGenerator';
+import { showToast } from './Toast';
 
 export default function SettingsScreen({ settings, onUpdateSettings, onResetToday, onResetAll, installPrompt, onInstalled }) {
   const [showResetConfirm, setShowResetConfirm] = useState(false);
@@ -42,8 +43,11 @@ export default function SettingsScreen({ settings, onUpdateSettings, onResetToda
         <input
           type="time"
           value={settings.defaultWakeTime || '07:00'}
-          onChange={(e) => onUpdateSettings({ defaultWakeTime: e.target.value })}
-          className="text-lg"
+          onChange={(e) => {
+            onUpdateSettings({ defaultWakeTime: e.target.value });
+            showToast(`Wake time set to ${e.target.value}`, 'info');
+          }}
+          style={{ fontSize: '20px', padding: '12px' }}
         />
       </div>
 
@@ -57,7 +61,7 @@ export default function SettingsScreen({ settings, onUpdateSettings, onResetToda
               type="time"
               value={settings.workStart || '09:00'}
               onChange={(e) => onUpdateSettings({ workStart: e.target.value })}
-              className="text-base"
+              style={{ fontSize: '16px', padding: '10px' }}
             />
           </div>
           <div className="flex-1">
@@ -66,7 +70,7 @@ export default function SettingsScreen({ settings, onUpdateSettings, onResetToda
               type="time"
               value={settings.workEnd || '18:00'}
               onChange={(e) => onUpdateSettings({ workEnd: e.target.value })}
-              className="text-base"
+              style={{ fontSize: '16px', padding: '10px' }}
             />
           </div>
         </div>
@@ -132,7 +136,7 @@ export default function SettingsScreen({ settings, onUpdateSettings, onResetToda
 
       {/* Actions */}
       <div className="space-y-3 mt-8">
-        <button onClick={onResetToday} className="btn-secondary w-full">
+        <button onClick={() => { onResetToday(); showToast("Today's progress reset", 'info'); }} className="btn-secondary w-full min-h-[48px]">
           Reset Today's Progress
         </button>
 
@@ -160,7 +164,7 @@ export default function SettingsScreen({ settings, onUpdateSettings, onResetToda
       </div>
 
       <div className="text-center mt-8 text-xs text-muted">
-        Protocol OS v1.1 — Personal Build
+        Protocol OS v2.0 — Personal Build
       </div>
     </div>
   );

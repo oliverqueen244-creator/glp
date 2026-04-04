@@ -9,6 +9,7 @@ import WorkoutScreen from './components/WorkoutScreen';
 import SettingsScreen from './components/SettingsScreen';
 import BottomNav from './components/BottomNav';
 import FeelingCheck from './components/FeelingCheck';
+import ToastContainer, { showToast } from './components/Toast';
 import { isInjectionDay, getWeekNumber } from './engine/dayGenerator';
 import { MY_SUPPLEMENTS } from './data/supplements';
 
@@ -64,10 +65,19 @@ export default function App() {
 
   const handleComplete = useCallback((eventId) => {
     setCompletedIds(prev => {
-      if (prev.includes(eventId)) return prev.filter(id => id !== eventId);
+      if (prev.includes(eventId)) {
+        showToast('Unmarked', 'info');
+        return prev.filter(id => id !== eventId);
+      }
+      const event = events.find(e => e.id === eventId);
+      if (event?.protein > 0) {
+        showToast(`+${event.protein}g protein logged`, 'success');
+      } else {
+        showToast('Done', 'success');
+      }
       return [...prev, eventId];
     });
-  }, [setCompletedIds]);
+  }, [setCompletedIds, events]);
 
   const handleSwapMeal = useCallback((eventId, newMealId) => {
     const newMeal = MEALS_MAP[newMealId];
@@ -109,9 +119,14 @@ export default function App() {
   }, [nauseaMode, wakeTime, setNauseaMode, regenerateDay]);
 
   const handleToggleSupplement = useCallback((suppId) => {
-    setCompletedSupplements(prev =>
-      prev.includes(suppId) ? prev.filter(id => id !== suppId) : [...prev, suppId]
-    );
+    setCompletedSupplements(prev => {
+      if (prev.includes(suppId)) {
+        return prev.filter(id => id !== suppId);
+      }
+      const supp = MY_SUPPLEMENTS.find(s => s.id === suppId);
+      showToast(supp ? `${supp.name} taken` : 'Supplement taken', 'success');
+      return [...prev, suppId];
+    });
   }, [setCompletedSupplements]);
 
   const handleSkipGym = useCallback(() => {
@@ -140,7 +155,13 @@ export default function App() {
   }, [setEvents]);
 
   const handleAddHydration = useCallback((ml) => {
-    setHydration(prev => prev + ml);
+    setHydration(prev => {
+      const next = prev + ml;
+      if (prev < 3500 && next >= 3500) {
+        showToast('Hydration target reached!', 'success');
+      }
+      return next;
+    });
   }, [setHydration]);
 
   const handleRecalculate = useCallback(() => {
@@ -238,6 +259,7 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-offwhite max-w-lg mx-auto relative">
+      <ToastContainer />
       {feelingMessage && (
         <div className="px-5 pt-3 fade-in">
           <div className="px-3 py-2 rounded-lg text-xs font-medium"
