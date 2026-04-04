@@ -53,7 +53,7 @@ function getSupplementsForTiming(timing, dayOfWeek, nauseaMode) {
   });
 }
 
-export function generateDay(wakeTimeMinutes, dayOfWeek, weekNum, nauseaMode = false, workEndMinutes = null, gymStartMinutes = null, travelMode = false) {
+export function generateDay(wakeTimeMinutes, dayOfWeek, weekNum, nauseaMode = false, workEndMinutes = null, gymStartMinutes = null, travelMode = false, targetSleepMinutes = 1320) {
   const events = [];
   const training = TRAINING_SCHEDULE[dayOfWeek];
   const menu = WEEKLY_MENU[dayOfWeek];
@@ -103,11 +103,11 @@ export function generateDay(wakeTimeMinutes, dayOfWeek, weekNum, nauseaMode = fa
     addEvent(wakeTimeMinutes + 600, 'walk', 'Walk if possible — 30 min', {
       duration: 30, description: 'Walk at airport, hotel, or around destination. Any movement counts.',
     });
-    addEvent(wakeTimeMinutes + 720, 'supplement', 'Bedtime Supplements', {
+    addEvent(Math.min(wakeTimeMinutes + 720, targetSleepMinutes - 60), 'supplement', 'Bedtime Supplements', {
       description: 'Magnesium at hotel/home.',
       supplements: getSupplementsForTiming('bedtime', dayOfWeek, nauseaMode),
     });
-    addEvent(wakeTimeMinutes + 780, 'sleep', 'Sleep Target', {
+    addEvent(targetSleepMinutes, 'sleep', 'Sleep Target', {
       description: 'Travel is tiring. Get sleep. Resume protocol tomorrow.',
     });
     return events.sort((a, b) => a.time - b.time);
@@ -156,29 +156,35 @@ export function generateDay(wakeTimeMinutes, dayOfWeek, weekNum, nauseaMode = fa
     description: 'Brisk walk. Aids digestion and glucose disposal.',
   });
 
-  // Calculate meal times based on wake
+  // Calculate meal times based on wake and target sleep
+  // Work backwards from sleep: sleep → meal6 → bedtime supps → meal5
+  const sleepTarget = targetSleepMinutes;
   let meal2Time, meal3Time, meal4Time, meal5Time, meal6Time;
+
+  // Meal 6 = 60 min before sleep, Meal 5 = 150 min before meal 6
+  const defaultMeal6 = sleepTarget - 60;
+  const defaultMeal5 = defaultMeal6 - 150;
 
   if (isVeryLateWake) {
     // 4 meals max
     meal2Time = meal1Time + 120;
     meal3Time = meal2Time + 90;
-    meal5Time = Math.max(meal3Time + 120, 1140); // 7 PM or later
-    meal6Time = Math.max(meal5Time + 150, 1290); // 9:30 PM or later
+    meal5Time = Math.max(meal3Time + 120, defaultMeal5);
+    meal6Time = Math.max(meal5Time + 150, defaultMeal6);
     meal4Time = null;
   } else if (isLateWake) {
     // Merge meal 2+3
     meal2Time = meal1Time + 120;
     meal3Time = null; // merged into meal2
     meal4Time = meal2Time + 150;
-    meal5Time = Math.max(meal4Time + 150, 1140);
-    meal6Time = Math.max(meal5Time + 150, 1290);
+    meal5Time = Math.max(meal4Time + 150, defaultMeal5);
+    meal6Time = Math.max(meal5Time + 150, defaultMeal6);
   } else {
-    // Normal day
+    // Normal day — anchor evening meals from sleep target
     meal2Time = meal1Time + 165;
     meal3Time = meal2Time + 90;
-    meal5Time = Math.max(1140, meal1Time + 690); // 7 PM anchor
-    meal6Time = Math.max(1290, meal5Time + 150); // 9:30 PM anchor
+    meal5Time = Math.max(defaultMeal5, meal1Time + 690);
+    meal6Time = Math.max(defaultMeal6, meal5Time + 150);
 
     if (isRest) {
       meal4Time = meal3Time + 120; // no gym, shorter gap
@@ -363,8 +369,8 @@ export function generateDay(wakeTimeMinutes, dayOfWeek, weekNum, nauseaMode = fa
     description: '4-count box breathing. 5 rounds. Dim lights. No screens after this.',
   });
 
-  // Sleep target
-  addEvent(meal6Time + 60, 'sleep', 'Sleep Target', {
+  // Sleep target — use the user's chosen bedtime
+  addEvent(Math.max(meal6Time + 30, sleepTarget), 'sleep', 'Sleep Target', {
     description: 'Lights out. 7-8 hours minimum for recovery and GLP-1 efficacy.',
   });
 

@@ -76,6 +76,21 @@ export default function SettingsScreen({ settings, onUpdateSettings, onResetToda
         </div>
       </div>
 
+      {/* Target Sleep Time */}
+      <div className="card mb-4">
+        <h3 className="text-xs font-semibold text-muted uppercase tracking-wider mb-3">Target Bedtime</h3>
+        <p className="text-xs text-muted mb-2">Evening meals and supplements will be scheduled backwards from this time.</p>
+        <input
+          type="time"
+          value={settings.targetSleepTime || '22:00'}
+          onChange={(e) => {
+            onUpdateSettings({ targetSleepTime: e.target.value });
+            showToast(`Bedtime set to ${e.target.value}`, 'info');
+          }}
+          style={{ fontSize: '20px', padding: '12px' }}
+        />
+      </div>
+
       {/* Current weight */}
       <div className="card mb-4">
         <h3 className="text-xs font-semibold text-muted uppercase tracking-wider mb-3">Current Weight</h3>

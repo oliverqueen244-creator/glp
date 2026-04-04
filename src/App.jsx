@@ -34,6 +34,7 @@ export default function App() {
     workStart: '09:00',
     workEnd: '18:00',
     currentWeight: 183,
+    targetSleepTime: '22:00',
   });
   const [showWakeModal, setShowWakeModal] = useState(wakeTime === null);
   const [showFeelingCheck, setShowFeelingCheck] = useState(false);
@@ -48,9 +49,12 @@ export default function App() {
     const [wh, wm] = (settings.workEnd || '18:00').split(':').map(Number);
     const workEndMinutes = wh * 60 + wm;
 
-    const dayEvents = generateDay(wakeMinutes, dayOfWeek, weekNum, nausea, workEndMinutes, gymStart, travel);
+    const [sh, sm] = (settings.targetSleepTime || '22:00').split(':').map(Number);
+    const sleepMinutes = sh * 60 + sm;
+
+    const dayEvents = generateDay(wakeMinutes, dayOfWeek, weekNum, nausea, workEndMinutes, gymStart, travel, sleepMinutes);
     setEvents(dayEvents);
-  }, [nauseaMode, gymOverride, travelMode, settings.workEnd, setEvents]);
+  }, [nauseaMode, gymOverride, travelMode, settings.workEnd, settings.targetSleepTime, setEvents]);
 
   const handleWakeStart = useCallback(({ wakeMinutes, gymStartMinutes, travelMode: travel }) => {
     setWakeTime(wakeMinutes);
