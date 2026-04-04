@@ -22,8 +22,10 @@ export default function WakeModal({ onStart, defaultWakeTime = '07:00' }) {
     ? 'Weekly monitoring today.'
     : `Day ${dayNum} of 90 — ${pct}% through.`;
 
-  const currentTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
-  const [wakeTime, setWakeTime] = useState(defaultWakeTime);
+  const [wakeTime, setWakeTime] = useState(() => {
+    const n = new Date();
+    return `${String(n.getHours()).padStart(2, '0')}:${String(n.getMinutes()).padStart(2, '0')}`;
+  });
   const [customGym, setCustomGym] = useState(false);
   const [gymTime, setGymTime] = useState('18:00');
   const [travelMode, setTravelMode] = useState(false);

@@ -1,7 +1,6 @@
 import { useState } from 'react';
 
-export default function HydrationCounter({ consumed, onAdd }) {
-  const target = 3500;
+export default function HydrationCounter({ consumed, onAdd, target = 3500 }) {
   const pct = Math.min(consumed / target, 1);
   const liters = (consumed / 1000).toFixed(1);
   const targetL = (target / 1000).toFixed(1);

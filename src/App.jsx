@@ -12,6 +12,7 @@ import FeelingCheck from './components/FeelingCheck';
 import ToastContainer, { showToast } from './components/Toast';
 import { isInjectionDay, getWeekNumber } from './engine/dayGenerator';
 import { MY_SUPPLEMENTS } from './data/supplements';
+import { MY_PROFILE } from './data/profile';
 
 function getTodayKey() {
   const d = new Date();
@@ -62,10 +63,9 @@ export default function App() {
       setGymOverride(gymStartMinutes);
     }
     setTravelMode(travel || false);
-    setCompletedIds([]);
     regenerateDay(wakeMinutes, nauseaMode, gymStartMinutes, travel || false);
     setShowWakeModal(false);
-  }, [setWakeTime, setGymOverride, setTravelMode, setCompletedIds, nauseaMode, regenerateDay]);
+  }, [setWakeTime, setGymOverride, setTravelMode, nauseaMode, regenerateDay]);
 
   const handleComplete = useCallback((eventId) => {
     setCompletedIds(prev => {
@@ -143,7 +143,7 @@ export default function App() {
       );
       if (trainingEvent) {
         filtered.push({
-          id: `home-${Date.now()}`,
+          id: `training-home-${trainingEvent.time}`,
           time: trainingEvent.time,
           timeStr: trainingEvent.timeStr,
           type: 'training',
@@ -161,7 +161,7 @@ export default function App() {
   const handleAddHydration = useCallback((ml) => {
     setHydration(prev => {
       const next = prev + ml;
-      if (prev < 3500 && next >= 3500) {
+      if (prev < MY_PROFILE.hydrationTarget && next >= MY_PROFILE.hydrationTarget) {
         showToast('Hydration target reached!', 'success');
       }
       return next;
@@ -239,6 +239,19 @@ export default function App() {
       if (dateMatch && dateMatch[1] < cutoffKey) {
         localStorage.removeItem(key);
       }
+    }
+    try {
+      const historyRaw = localStorage.getItem('weight-history');
+      if (historyRaw) {
+        const history = JSON.parse(historyRaw);
+        const trimmed = {};
+        for (const [exercise, entries] of Object.entries(history)) {
+          trimmed[exercise] = entries.filter(e => e.date >= cutoffKey);
+        }
+        localStorage.setItem('weight-history', JSON.stringify(trimmed));
+      }
+    } catch (e) {
+      // ignore
     }
   }, []);
 

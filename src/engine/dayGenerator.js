@@ -61,11 +61,10 @@ export function generateDay(wakeTimeMinutes, dayOfWeek, weekNum, nauseaMode = fa
   const isLateWake = wakeTimeMinutes >= 600; // 10:00 AM
   const isVeryLateWake = wakeTimeMinutes >= 720; // 12:00 PM
 
-  const ts = Date.now();
-  let eventId = 0;
   const addEvent = (time, type, title, extra = {}) => {
+    const id = `${type}-${extra.mealNum || extra.trainingType || title.replace(/[^a-zA-Z0-9]/g, '').substring(0, 20)}-${time}`;
     events.push({
-      id: `evt-${ts}-${eventId++}`,
+      id,
       time,
       timeStr: formatTime12(time),
       type,

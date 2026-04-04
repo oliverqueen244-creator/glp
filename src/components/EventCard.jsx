@@ -128,6 +128,13 @@ export default function EventCard({ event, isCurrent, isCompleted, onComplete, o
         </span>
       )}
 
+      {meal?.prepNote && (
+        <div className="text-xs font-medium px-3 py-2 rounded-lg mb-2"
+          style={{ background: '#FDECEC', color: '#C47070' }}>
+          {meal.prepNote}
+        </div>
+      )}
+
       {event.mealNum === 5 && [0, 3].includes(new Date().getDay()) && (
         <div className="text-xs font-medium px-2 py-1 rounded-lg mb-2"
           style={{ background: '#FFF5ED', color: '#C4956A' }}>

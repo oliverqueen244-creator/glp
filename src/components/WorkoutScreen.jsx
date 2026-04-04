@@ -33,13 +33,14 @@ function RestTimer({ seconds, onDismiss }) {
   );
 }
 
-function ExerciseCard({ exercise, exerciseIndex, completedSets, onCompleteSet, onStartTimer, todayWeights, onLogWeight, weightHistory }) {
+function ExerciseCard({ exercise, exerciseIndex, completedSets, onCompleteSet, onStartTimer, todayWeights, onLogWeight, weightHistory, dateKey }) {
   const [showInstructions, setShowInstructions] = useState(false);
   const totalSets = exercise.sets;
   const doneSets = completedSets[exerciseIndex] || 0;
 
   const history = weightHistory?.[exercise.name] || [];
-  const lastSession = history.length > 0 ? history[history.length - 1] : null;
+  const previousSessions = history.filter(h => h.date !== dateKey);
+  const lastSession = previousSessions.length > 0 ? previousSessions[previousSessions.length - 1] : null;
   const suggestedWeight = lastSession ? Number(lastSession.weight) + 2.5 : null;
 
   return (
@@ -256,6 +257,7 @@ export default function WorkoutScreen() {
           todayWeights={todayWeights}
           onLogWeight={handleLogWeight}
           weightHistory={weightHistory}
+          dateKey={dateKey}
         />
       ))}
 

@@ -5,6 +5,7 @@ export const MY_PROFILE = {
   age: 29,
   proteinTarget: 178,
   calorieTarget: 1743,
+  hydrationTarget: 3500,
   medication: {
     name: "Mounjaro (Tirzepatide)",
     startDate: "2026-04-02",

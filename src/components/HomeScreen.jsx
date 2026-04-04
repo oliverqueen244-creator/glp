@@ -156,7 +156,7 @@ export default function HomeScreen({ events, completedIds, onComplete, onSwapMea
 
         <div className="flex items-center gap-4 mt-4">
           <ProteinRing consumed={proteinConsumed} target={MY_PROFILE.proteinTarget} />
-          <HydrationCounter consumed={hydration} onAdd={onAddHydration} />
+          <HydrationCounter consumed={hydration} onAdd={onAddHydration} target={MY_PROFILE.hydrationTarget} />
         </div>
         <div className="flex justify-end mt-2">
           <button onClick={onRecalculate} className="btn-secondary text-xs min-h-[36px]">

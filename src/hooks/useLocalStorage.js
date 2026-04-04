@@ -13,7 +13,11 @@ export function useLocalStorage(key, initialValue) {
   const setValue = useCallback((value) => {
     setStoredValue((prev) => {
       const next = typeof value === 'function' ? value(prev) : value;
-      localStorage.setItem(key, JSON.stringify(next));
+      try {
+        localStorage.setItem(key, JSON.stringify(next));
+      } catch (e) {
+        console.error('localStorage full:', e);
+      }
       return next;
     });
   }, [key]);
