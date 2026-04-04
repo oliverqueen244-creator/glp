@@ -160,7 +160,7 @@ export default function App() {
 
   const handleAddHydration = useCallback((ml) => {
     setHydration(prev => {
-      const next = prev + ml;
+      const next = Math.max(0, prev + ml);
       if (prev < MY_PROFILE.hydrationTarget && next >= MY_PROFILE.hydrationTarget) {
         showToast('Hydration target reached!', 'success');
       }
@@ -244,9 +244,12 @@ export default function App() {
       const historyRaw = localStorage.getItem('weight-history');
       if (historyRaw) {
         const history = JSON.parse(historyRaw);
+        const weightCutoff = new Date();
+        weightCutoff.setDate(weightCutoff.getDate() - 90);
+        const weightCutoffKey = `${weightCutoff.getFullYear()}-${String(weightCutoff.getMonth() + 1).padStart(2, '0')}-${String(weightCutoff.getDate()).padStart(2, '0')}`;
         const trimmed = {};
         for (const [exercise, entries] of Object.entries(history)) {
-          trimmed[exercise] = entries.filter(e => e.date >= cutoffKey);
+          trimmed[exercise] = entries.filter(e => e.date >= weightCutoffKey);
         }
         localStorage.setItem('weight-history', JSON.stringify(trimmed));
       }

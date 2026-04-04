@@ -24,7 +24,7 @@ export function getWeekNumber(dateStr) {
   const start = new Date('2026-04-02');
   const current = new Date(dateStr);
   const diff = Math.floor((current - start) / (1000 * 60 * 60 * 24));
-  return Math.floor(diff / 7) + 1;
+  return Math.max(1, Math.floor(diff / 7) + 1);
 }
 
 export function getCurrentDose(weekNum) {

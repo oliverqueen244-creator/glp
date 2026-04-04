@@ -42,7 +42,7 @@ export default function SupplementScreen({ completedSupplements, onToggleSupplem
         <div
           className="h-full rounded-full transition-all duration-500"
           style={{
-            width: `${(doneCount / totalCount) * 100}%`,
+            width: `${totalCount > 0 ? (doneCount / totalCount) * 100 : 0}%`,
             backgroundColor: doneCount === totalCount ? '#7C8B6F' : '#C4956A',
           }}
         />
