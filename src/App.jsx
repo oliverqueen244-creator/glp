@@ -8,6 +8,9 @@ import SupplementScreen from './components/SupplementScreen';
 import WorkoutScreen from './components/WorkoutScreen';
 import SettingsScreen from './components/SettingsScreen';
 import BottomNav from './components/BottomNav';
+import FeelingCheck from './components/FeelingCheck';
+import { isInjectionDay, getWeekNumber } from './engine/dayGenerator';
+import { MY_SUPPLEMENTS } from './data/supplements';
 
 function getTodayKey() {
   const d = new Date();
@@ -24,6 +27,7 @@ export default function App() {
   const [nauseaMode, setNauseaMode] = useLocalStorage(`nausea-${todayKey}`, false);
   const [hydration, setHydration] = useLocalStorage(`hydration-${todayKey}`, 0);
   const [gymOverride, setGymOverride] = useLocalStorage(`gym-${todayKey}`, null);
+  const [travelMode, setTravelMode] = useLocalStorage(`travel-${todayKey}`, false);
   const [settings, setSettings] = useLocalStorage('protocol-settings', {
     defaultWakeTime: '07:00',
     workStart: '09:00',
@@ -31,8 +35,10 @@ export default function App() {
     currentWeight: 183,
   });
   const [showWakeModal, setShowWakeModal] = useState(wakeTime === null);
+  const [showFeelingCheck, setShowFeelingCheck] = useState(false);
+  const [feelingMessage, setFeelingMessage] = useState(null);
 
-  const regenerateDay = useCallback((wakeMinutes, nausea = nauseaMode, gymStart = gymOverride) => {
+  const regenerateDay = useCallback((wakeMinutes, nausea = nauseaMode, gymStart = gymOverride, travel = travelMode) => {
     const now = new Date();
     const dayOfWeek = now.getDay();
     const startDate = new Date('2026-04-02');
@@ -41,18 +47,20 @@ export default function App() {
     const [wh, wm] = (settings.workEnd || '18:00').split(':').map(Number);
     const workEndMinutes = wh * 60 + wm;
 
-    const dayEvents = generateDay(wakeMinutes, dayOfWeek, weekNum, nausea, workEndMinutes, gymStart);
+    const dayEvents = generateDay(wakeMinutes, dayOfWeek, weekNum, nausea, workEndMinutes, gymStart, travel);
     setEvents(dayEvents);
-  }, [nauseaMode, gymOverride, settings.workEnd, setEvents]);
+  }, [nauseaMode, gymOverride, travelMode, settings.workEnd, setEvents]);
 
-  const handleWakeStart = useCallback(({ wakeMinutes, gymStartMinutes }) => {
+  const handleWakeStart = useCallback(({ wakeMinutes, gymStartMinutes, travelMode: travel }) => {
     setWakeTime(wakeMinutes);
     if (gymStartMinutes !== null) {
       setGymOverride(gymStartMinutes);
     }
-    regenerateDay(wakeMinutes, nauseaMode, gymStartMinutes);
+    setTravelMode(travel || false);
+    setCompletedIds([]);
+    regenerateDay(wakeMinutes, nauseaMode, gymStartMinutes, travel || false);
     setShowWakeModal(false);
-  }, [setWakeTime, setGymOverride, nauseaMode, regenerateDay]);
+  }, [setWakeTime, setGymOverride, setTravelMode, setCompletedIds, nauseaMode, regenerateDay]);
 
   const handleComplete = useCallback((eventId) => {
     setCompletedIds(prev => {
@@ -107,13 +115,28 @@ export default function App() {
   }, [setCompletedSupplements]);
 
   const handleSkipGym = useCallback(() => {
-    setEvents(prev => prev.filter(e =>
-      e.type !== 'training' || e.trainingType === 'rest'
-    ).filter(e =>
-      e.type !== 'travel'
-    ).filter(e =>
-      !(e.type === 'supplement' && e.title === 'Post-Training ORS')
-    ));
+    setEvents(prev => {
+      const trainingEvent = prev.find(e => e.type === 'training' && e.trainingType !== 'rest');
+      const filtered = prev.filter(e =>
+        (e.type !== 'training' || e.trainingType === 'rest') &&
+        e.type !== 'travel' &&
+        !(e.type === 'supplement' && e.title === 'Post-Training ORS')
+      );
+      if (trainingEvent) {
+        filtered.push({
+          id: `home-${Date.now()}`,
+          time: trainingEvent.time,
+          timeStr: trainingEvent.timeStr,
+          type: 'training',
+          trainingType: 'home',
+          title: 'Home Workout (Gym Skipped)',
+          description: '20 min bodyweight circuit: 3x10 wall push-ups, 3x10 bodyweight squats to chair, 3x10 glute bridges, 3x30sec plank on knees. Or just walk 30 minutes.',
+          duration: 20,
+        });
+        filtered.sort((a, b) => a.time - b.time);
+      }
+      return filtered;
+    });
   }, [setEvents]);
 
   const handleAddHydration = useCallback((ml) => {
@@ -153,6 +176,47 @@ export default function App() {
     return () => window.removeEventListener('beforeinstallprompt', handler);
   }, []);
 
+  // Post-injection feeling check (day after injection)
+  useEffect(() => {
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    const yDay = yesterday.getDay();
+    const yDateStr = `${yesterday.getFullYear()}-${String(yesterday.getMonth() + 1).padStart(2, '0')}-${String(yesterday.getDate()).padStart(2, '0')}`;
+    const yWeek = getWeekNumber(yDateStr);
+    if (isInjectionDay(yDay, yWeek)) {
+      const checked = localStorage.getItem(`feeling-${todayKey}`);
+      if (!checked && wakeTime !== null) {
+        setShowFeelingCheck(true);
+      }
+    }
+  }, [todayKey, wakeTime]);
+
+  const handleFeelingResponse = useCallback((key, action, message) => {
+    localStorage.setItem(`feeling-${todayKey}`, key);
+    if (action === 'nausea-mode' && !nauseaMode) {
+      handleToggleNausea();
+    }
+    setShowFeelingCheck(false);
+    if (message) {
+      setFeelingMessage(message);
+      setTimeout(() => setFeelingMessage(null), 5000);
+    }
+  }, [todayKey, nauseaMode, handleToggleNausea]);
+
+  // Clean up localStorage keys older than 14 days
+  useEffect(() => {
+    const cutoff = new Date();
+    cutoff.setDate(cutoff.getDate() - 14);
+    const cutoffKey = `${cutoff.getFullYear()}-${String(cutoff.getMonth() + 1).padStart(2, '0')}-${String(cutoff.getDate()).padStart(2, '0')}`;
+    for (let i = localStorage.length - 1; i >= 0; i--) {
+      const key = localStorage.key(i);
+      const dateMatch = key?.match(/-(\d{4}-\d{2}-\d{2})$/);
+      if (dateMatch && dateMatch[1] < cutoffKey) {
+        localStorage.removeItem(key);
+      }
+    }
+  }, []);
+
   // Midnight auto-refresh: detect date change when app returns to foreground
   useEffect(() => {
     const handleVisibility = () => {
@@ -164,12 +228,24 @@ export default function App() {
     return () => document.removeEventListener('visibilitychange', handleVisibility);
   }, [todayKey]);
 
+  if (showFeelingCheck) {
+    return <FeelingCheck onRespond={handleFeelingResponse} />;
+  }
+
   if (showWakeModal) {
     return <WakeModal onStart={handleWakeStart} defaultWakeTime={settings.defaultWakeTime} />;
   }
 
   return (
     <div className="min-h-screen bg-offwhite max-w-lg mx-auto relative">
+      {feelingMessage && (
+        <div className="px-5 pt-3 fade-in">
+          <div className="px-3 py-2 rounded-lg text-xs font-medium"
+            style={{ background: '#FDECEC', color: '#C47070' }}>
+            {feelingMessage}
+          </div>
+        </div>
+      )}
       {activeTab === 'home' && (
         <HomeScreen
           events={events}
@@ -203,7 +279,17 @@ export default function App() {
           onInstalled={() => setInstallPrompt(null)}
         />
       )}
-      <BottomNav activeTab={activeTab} onTabChange={setActiveTab} />
+      <BottomNav
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
+        supplementsRemaining={
+          MY_SUPPLEMENTS.filter(s => {
+            if (nauseaMode && s.disableOnNausea) return false;
+            if (!s.daily && s.days && !s.days.includes(new Date().getDay())) return false;
+            return true;
+          }).filter(s => !completedSupplements.includes(s.id)).length
+        }
+      />
     </div>
   );
 }

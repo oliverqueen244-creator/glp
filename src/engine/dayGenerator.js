@@ -53,7 +53,7 @@ function getSupplementsForTiming(timing, dayOfWeek, nauseaMode) {
   });
 }
 
-export function generateDay(wakeTimeMinutes, dayOfWeek, weekNum, nauseaMode = false, workEndMinutes = null, gymStartMinutes = null) {
+export function generateDay(wakeTimeMinutes, dayOfWeek, weekNum, nauseaMode = false, workEndMinutes = null, gymStartMinutes = null, travelMode = false) {
   const events = [];
   const training = TRAINING_SCHEDULE[dayOfWeek];
   const menu = WEEKLY_MENU[dayOfWeek];
@@ -61,10 +61,11 @@ export function generateDay(wakeTimeMinutes, dayOfWeek, weekNum, nauseaMode = fa
   const isLateWake = wakeTimeMinutes >= 600; // 10:00 AM
   const isVeryLateWake = wakeTimeMinutes >= 720; // 12:00 PM
 
+  const ts = Date.now();
   let eventId = 0;
   const addEvent = (time, type, title, extra = {}) => {
     events.push({
-      id: `evt-${eventId++}`,
+      id: `evt-${ts}-${eventId++}`,
       time,
       timeStr: formatTime12(time),
       type,
@@ -72,6 +73,45 @@ export function generateDay(wakeTimeMinutes, dayOfWeek, weekNum, nauseaMode = fa
       ...extra,
     });
   };
+
+  // TRAVEL DAY — survival protocol
+  if (travelMode) {
+    const injDay = isInjectionDay(dayOfWeek, weekNum);
+    if (injDay) {
+      addEvent(wakeTimeMinutes, 'injection', 'Mounjaro Injection', {
+        dose: getCurrentDose(weekNum), site: getInjectionSite(weekNum), isInjection: true,
+      });
+    }
+    addEvent(wakeTimeMinutes + 15, 'supplement', 'ORS + Morning Supplements', {
+      description: 'ORS in 500ml bottle. Pack pill organizer: Chromium, D3+K2, Vit C+Zinc.',
+      supplements: getSupplementsForTiming('wake', dayOfWeek, nauseaMode),
+    });
+    addEvent(wakeTimeMinutes + 30, 'meal', 'Travel Meal 1: Dry Whey Pack', {
+      mealNum: 1, mealId: 'travel-whey', protein: 24, calories: 120, cookTime: 1,
+    });
+    addEvent(wakeTimeMinutes + 180, 'meal', 'Travel Meal 2: Boiled Eggs + Paneer', {
+      mealNum: 2, mealId: 'travel-eggs', protein: 30, calories: 390, cookTime: 0,
+      description: 'Packed boiled eggs + paneer cubes with chaat masala.',
+    });
+    addEvent(wakeTimeMinutes + 360, 'meal', 'Travel Meal 3: Restaurant Protein', {
+      mealNum: 3, mealId: 'travel-restaurant', protein: 25, calories: 350, cookTime: 0,
+      description: 'Find restaurant: order paneer tikka or egg bhurji + dal. Skip roti/rice.',
+    });
+    addEvent(wakeTimeMinutes + 540, 'meal', 'Travel Meal 4: Whey Pack', {
+      mealNum: 4, mealId: 'travel-whey', protein: 24, calories: 120, cookTime: 1,
+    });
+    addEvent(wakeTimeMinutes + 600, 'walk', 'Walk if possible — 30 min', {
+      duration: 30, description: 'Walk at airport, hotel, or around destination. Any movement counts.',
+    });
+    addEvent(wakeTimeMinutes + 720, 'supplement', 'Bedtime Supplements', {
+      description: 'Magnesium at hotel/home.',
+      supplements: getSupplementsForTiming('bedtime', dayOfWeek, nauseaMode),
+    });
+    addEvent(wakeTimeMinutes + 780, 'sleep', 'Sleep Target', {
+      description: 'Travel is tiring. Get sleep. Resume protocol tomorrow.',
+    });
+    return events.sort((a, b) => a.time - b.time);
+  }
 
   // Injection day
   const injDay = isInjectionDay(dayOfWeek, weekNum);

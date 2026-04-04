@@ -104,6 +104,32 @@ export default function SettingsScreen({ settings, onUpdateSettings, onResetToda
         </div>
       )}
 
+      {/* Data Export */}
+      <div className="card mb-4">
+        <h3 className="text-xs font-semibold text-muted uppercase tracking-wider mb-3">Export Data</h3>
+        <p className="text-sm text-muted mb-3">Download all your protocol data as a JSON file.</p>
+        <button
+          onClick={() => {
+            const data = {};
+            for (let i = 0; i < localStorage.length; i++) {
+              const key = localStorage.key(i);
+              try { data[key] = JSON.parse(localStorage.getItem(key)); }
+              catch { data[key] = localStorage.getItem(key); }
+            }
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `protocol-os-backup-${dateStr}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+          }}
+          className="btn-secondary w-full"
+        >
+          Download Backup
+        </button>
+      </div>
+
       {/* Actions */}
       <div className="space-y-3 mt-8">
         <button onClick={onResetToday} className="btn-secondary w-full">

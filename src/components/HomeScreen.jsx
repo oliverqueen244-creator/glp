@@ -2,7 +2,7 @@ import { useState } from 'react';
 import ProteinRing from './ProteinRing';
 import HydrationCounter from './HydrationCounter';
 import EventCard from './EventCard';
-import { MY_PROFILE, TRAINING_SCHEDULE } from '../data/profile';
+import { MY_PROFILE, TRAINING_SCHEDULE, SOAKING_SCHEDULE } from '../data/profile';
 import { getWeekNumber, isInjectionDay, calculateProteinConsumed, getCurrentEvent } from '../engine/dayGenerator';
 
 const DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
@@ -54,6 +54,10 @@ export default function HomeScreen({ events, completedIds, onComplete, onSwapMea
   const completedEvents = events.filter(e => completedIds.includes(e.id));
   const upcomingEvents = events.filter(e => !completedIds.includes(e.id) && e.id !== currentEvent?.id);
 
+  const isZincDay = [0, 3].includes(dayOfWeek); // Sun, Wed
+  const soaking = SOAKING_SCHEDULE[dayOfWeek];
+  const isPastEight = currentMinutes >= 1200; // 8 PM
+  const soakingDone = soaking && completedIds.some(id => events.find(e => e.id === id && e.type === 'prep'));
   const accentBg = injDay ? 'rgba(196, 112, 112, 0.05)' : undefined;
 
   return (
@@ -103,6 +107,13 @@ export default function HomeScreen({ events, completedIds, onComplete, onSwapMea
           <div className="mt-2 px-3 py-2 rounded-lg text-xs font-medium fade-in"
             style={{ background: '#FDECEC', color: '#C47070' }}>
             Nausea mode active — liquid meals only
+          </div>
+        )}
+
+        {isZincDay && (
+          <div className="mt-2 px-3 py-2 rounded-lg text-xs font-medium"
+            style={{ background: '#FFF5ED', color: '#C4956A' }}>
+            Zinc day — extra Zinc Picolinate capsule with dinner
           </div>
         )}
 
@@ -176,6 +187,17 @@ export default function HomeScreen({ events, completedIds, onComplete, onSwapMea
           </div>
         )}
       </div>
+
+      {/* Sticky soaking reminder after 8 PM */}
+      {isPastEight && soaking && !soakingDone && (
+        <div className="fixed bottom-16 left-0 right-0 px-5 z-30">
+          <div className="card max-w-lg mx-auto" style={{ borderLeft: '4px solid #C4956A', background: '#FFFCF5' }}>
+            <div className="text-xs font-semibold uppercase tracking-wider mb-1" style={{ color: '#C4956A' }}>Tonight's Prep</div>
+            <div className="text-sm text-charcoal">{soaking.item}</div>
+            <div className="text-xs text-muted mt-1">{soaking.instructions}</div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

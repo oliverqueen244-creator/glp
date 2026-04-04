@@ -33,12 +33,14 @@ function RestTimer({ seconds, onDismiss }) {
   );
 }
 
-function ExerciseCard({ exercise, exerciseIndex, completedSets, onCompleteSet, onStartTimer, weightLog, onLogWeight }) {
+function ExerciseCard({ exercise, exerciseIndex, completedSets, onCompleteSet, onStartTimer, todayWeights, onLogWeight, weightHistory }) {
   const [showInstructions, setShowInstructions] = useState(false);
   const totalSets = exercise.sets;
   const doneSets = completedSets[exerciseIndex] || 0;
 
-  const prevWeight = weightLog?.[exercise.name];
+  const history = weightHistory?.[exercise.name] || [];
+  const lastSession = history.length > 0 ? history[history.length - 1] : null;
+  const suggestedWeight = lastSession ? Number(lastSession.weight) + 2.5 : null;
 
   return (
     <div className="card mb-3">
@@ -79,13 +81,18 @@ function ExerciseCard({ exercise, exerciseIndex, completedSets, onCompleteSet, o
           type="number"
           className="w-20 text-sm px-2 py-1.5 rounded-lg bg-offwhite border border-border text-charcoal"
           placeholder={exercise.startingWeight}
-          value={weightLog?.[exercise.name] || ''}
+          value={todayWeights?.[exercise.name] || ''}
           onChange={e => onLogWeight(exercise.name, e.target.value)}
         />
         <span className="text-xs text-muted">kg</span>
-        {prevWeight && (
-          <span className="text-xs text-sage ml-auto">Last: {prevWeight} kg</span>
-        )}
+        <div className="ml-auto text-right">
+          {lastSession && (
+            <div className="text-xs text-muted">Last: {lastSession.weight}kg</div>
+          )}
+          {suggestedWeight && (
+            <div className="text-xs text-sage">Try: {suggestedWeight}kg</div>
+          )}
+        </div>
       </div>
 
       <div className="flex gap-2">
@@ -132,7 +139,8 @@ export default function WorkoutScreen() {
 
   const dateKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
   const [completedSets, setCompletedSets] = useLocalStorage(`workout-sets-${dateKey}`, {});
-  const [weightLog, setWeightLog] = useLocalStorage('weight-log', {});
+  const [todayWeights, setTodayWeights] = useLocalStorage(`weights-${dateKey}`, {});
+  const [weightHistory, setWeightHistory] = useLocalStorage('weight-history', {});
   const [timerSeconds, setTimerSeconds] = useState(null);
   const [showWarmup, setShowWarmup] = useState(false);
   const [showCooldown, setShowCooldown] = useState(false);
@@ -146,8 +154,27 @@ export default function WorkoutScreen() {
   }, [setCompletedSets]);
 
   const handleLogWeight = useCallback((name, val) => {
-    setWeightLog(prev => ({ ...prev, [name]: val }));
-  }, [setWeightLog]);
+    setTodayWeights(prev => ({ ...prev, [name]: val }));
+  }, [setTodayWeights]);
+
+  // Save to history when all sets of an exercise are completed
+  const handleCompleteSetWithHistory = useCallback((exerciseIdx) => {
+    handleCompleteSet(exerciseIdx);
+    const exercise = workout?.exercises[exerciseIdx];
+    if (!exercise) return;
+    const newDone = (completedSets[exerciseIdx] || 0) + 1;
+    if (newDone >= exercise.sets && todayWeights[exercise.name]) {
+      setWeightHistory(prev => {
+        const existing = prev[exercise.name] || [];
+        const alreadyLogged = existing.some(e => e.date === dateKey);
+        if (alreadyLogged) return prev;
+        return {
+          ...prev,
+          [exercise.name]: [...existing, { date: dateKey, weight: todayWeights[exercise.name] }],
+        };
+      });
+    }
+  }, [handleCompleteSet, workout, completedSets, todayWeights, dateKey, setWeightHistory]);
 
   if (!workout) {
     return (
@@ -208,10 +235,11 @@ export default function WorkoutScreen() {
           exercise={exercise}
           exerciseIndex={i}
           completedSets={completedSets}
-          onCompleteSet={handleCompleteSet}
+          onCompleteSet={handleCompleteSetWithHistory}
           onStartTimer={setTimerSeconds}
-          weightLog={weightLog}
+          todayWeights={todayWeights}
           onLogWeight={handleLogWeight}
+          weightHistory={weightHistory}
         />
       ))}
 

@@ -124,6 +124,13 @@ export default function EventCard({ event, isCurrent, isCompleted, onComplete, o
         </span>
       )}
 
+      {event.mealNum === 5 && [0, 3].includes(new Date().getDay()) && (
+        <div className="text-xs font-medium px-2 py-1 rounded-lg mb-2"
+          style={{ background: '#FFF5ED', color: '#C4956A' }}>
+          Zinc day — take extra capsule with this meal
+        </div>
+      )}
+
       {event.description && (
         <p className="text-sm text-muted mb-3">{event.description}</p>
       )}

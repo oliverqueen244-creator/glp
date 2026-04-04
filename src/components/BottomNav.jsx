@@ -43,7 +43,7 @@ const tabs = [
   },
 ];
 
-export default function BottomNav({ activeTab, onTabChange }) {
+export default function BottomNav({ activeTab, onTabChange, supplementsRemaining = 0 }) {
   return (
     <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-border z-40"
       style={{ paddingBottom: 'env(safe-area-inset-bottom, 8px)' }}>
@@ -56,7 +56,14 @@ export default function BottomNav({ activeTab, onTabChange }) {
               onClick={() => onTabChange(tab.id)}
               className="flex flex-col items-center gap-0.5 py-1 px-4 transition-all duration-200"
             >
-              {tab.icon(active)}
+              <div className="relative">
+                {tab.icon(active)}
+                {tab.id === 'supplements' && supplementsRemaining > 0 && (
+                  <span className="absolute -top-1 -right-1.5 w-3.5 h-3.5 rounded-full text-[8px] font-bold flex items-center justify-center text-white" style={{ backgroundColor: '#C4956A' }}>
+                    {supplementsRemaining > 9 ? '9+' : supplementsRemaining}
+                  </span>
+                )}
+              </div>
               <span className="text-[10px] font-medium" style={{ color: active ? '#C4956A' : '#9A9A9A' }}>
                 {tab.label}
               </span>

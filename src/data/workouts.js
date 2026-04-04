@@ -1,11 +1,43 @@
 // Shared components
-const RESISTANCE_WARMUP = [
-  {
-    name: "Stationary Bike",
-    duration: "5 min",
-    instructions: "Easy pace, get blood flowing",
-  },
+const BASE_WARMUP = [
+  { name: "Stationary Bike", duration: "5 min", instructions: "Easy pace, get blood flowing" },
 ];
+
+const LOWER_A_WARMUP = [
+  ...BASE_WARMUP,
+  { name: "Hip Circles", duration: "10 each direction", instructions: "Stand on one leg, circle the other hip. Open up the joint." },
+  { name: "Bodyweight Squats to Bench", duration: "10 reps", instructions: "Squat down until butt touches bench. Stand back up. Depth target practice." },
+  { name: "Leg Swings (side to side)", duration: "10 each leg", instructions: "Hold wall. Swing leg laterally. Loosen hip adductors." },
+];
+
+const UPPER_PUSH_WARMUP = [
+  ...BASE_WARMUP,
+  { name: "Arm Circles", duration: "10 each direction", instructions: "Small to large circles. Forward then backward." },
+  { name: "Band Pull-Aparts", duration: "15 reps", instructions: "Light band, pull apart at chest height. Warm up rear delts + rotator cuff." },
+  { name: "Wall Push-Ups", duration: "10 reps", instructions: "Hands on wall, push-up motion. Easy chest/shoulder activation." },
+];
+
+const UPPER_PULL_WARMUP = [
+  ...BASE_WARMUP,
+  { name: "Band Pull-Aparts", duration: "15 reps", instructions: "Light band at chest height. Warm up scapular muscles." },
+  { name: "Arm Circles", duration: "10 each direction", instructions: "Forward and backward. Full range." },
+  { name: "Cat-Cow Stretch", duration: "8 reps", instructions: "On all fours. Arch up (cat), then dip down (cow). Mobilize thoracic spine." },
+];
+
+const LOWER_B_WARMUP = [
+  ...BASE_WARMUP,
+  { name: "Hip Circles", duration: "10 each direction", instructions: "Open up hip joint for hinge movements." },
+  { name: "Leg Swings (front-back)", duration: "10 each leg", instructions: "Swing leg forward and back. Loosen hamstrings." },
+  { name: "Glute Bridges", duration: "10 reps", instructions: "On back, feet flat. Drive hips up. Activate glutes before heavy work." },
+  { name: "Band Walks", duration: "10 each direction", instructions: "Mini band above knees. Side steps. Wake up glute medius." },
+];
+
+const FULL_BODY_WARMUP = [
+  ...BASE_WARMUP,
+  { name: "Full Body Mobility Flow", duration: "3 min", instructions: "Arm circles → hip circles → bodyweight squats → cat-cow → shoulder shrugs. Continuous movement." },
+];
+
+const RESISTANCE_WARMUP = BASE_WARMUP;
 
 const RESISTANCE_CARDIO = {
   name: "Stationary Bike — Zone 2",
@@ -43,13 +75,13 @@ const REST_DAY = {
 
 export const WORKOUTS = {
   "Lower A — Quad Focus": {
-    warmup: RESISTANCE_WARMUP,
+    warmup: LOWER_A_WARMUP,
     exercises: [
       {
         name: "Leg Press",
         sets: 4,
         reps: "10-12",
-        rest: 120,
+        rest: 90,
         muscleGroup: "quads",
         instructions:
           "Sit in leg press. Feet shoulder-width on platform, middle height. Press platform away. Don't lock knees at top. Lower until 90 degrees. Push through whole foot.",
@@ -111,7 +143,7 @@ export const WORKOUTS = {
   },
 
   "Upper Push — Chest/Shoulders/Triceps": {
-    warmup: RESISTANCE_WARMUP,
+    warmup: UPPER_PUSH_WARMUP,
     exercises: [
       {
         name: "DB Bench Press (Flat)",
@@ -169,7 +201,7 @@ export const WORKOUTS = {
   },
 
   "Upper Pull — Back/Biceps": {
-    warmup: RESISTANCE_WARMUP,
+    warmup: UPPER_PULL_WARMUP,
     exercises: [
       {
         name: "Lat Pulldown (Wide)",
@@ -237,7 +269,7 @@ export const WORKOUTS = {
   },
 
   "Lower B — Posterior Chain": {
-    warmup: RESISTANCE_WARMUP,
+    warmup: LOWER_B_WARMUP,
     exercises: [
       {
         name: "Romanian Deadlift (DB)",
@@ -304,7 +336,7 @@ export const WORKOUTS = {
   },
 
   "Full Body Metabolic Circuit": {
-    warmup: RESISTANCE_WARMUP,
+    warmup: FULL_BODY_WARMUP,
     isCircuit: true,
     rounds: 4,
     restBetweenRounds: 60,
